@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><RootElement Attribute1Name="Attribute1Value" Attribute2Value="Attribute2Value"><Element1><!--This is a comment node-->This is a text node</Element1><Element2 AttributeName="AttributeValue"/><Element3 AttributeName1="AttributeValue1" AttributeName2="AttributeValue2"/></RootElement>

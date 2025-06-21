@@ -1,0 +1,160 @@
+# Config.bbx for Animal_Shelter Management System V1.0
+#
+# Setup
+#
+#ALIASES=20
+#FCBS=128
+#CIBS=128
+#STBLEN=4096
+aliases=199
+cibs=199
+fcbs=199
+handles=199
+stblen=20480
+#SETOPTS 00000020 
+#
+# Prefixes
+#
+PREFIX C:/Animal_Shelter/Classes/ C:/Animal_Shelter/Custom/ C:/Animal_Shelter/Progs/ C:/Animal_Shelter/Progs/email/ C:/Animal_Shelter/Data/ C:/Animal_Shelter/Templates/ C:/Animal_Shelter/Images/ C:/Bbj/utils/EXT/ C:/Bbj/utils/STD/ C:/BBJ/ C:/BBJ/bin/
+#
+######################## Global Variables #################
+#
+Set COMPANY=Animal Shelter Management
+Set PRODUCT=Animal Shelter 1.0
+Set DATABASE=Animal_Shelter
+Set DATASQL=Animal_Shelter_SQL
+Set DB_USER=admin
+Set DB_PASS=admin123
+Set ADDRESS1=123 Paw Lane
+Set ADDRESS2=
+Set ADDRESS3=Pet Town
+Set ADDRESS4=Animal State
+Set ADDRESS5=00000
+Set TELEPHONE=(555)555-1234
+Set VERSION=1.0
+Set PANTALLA_CORTA=0
+Set FAX=(555)555-5678
+Set LIBRERIA=C:/Animal_Shelter/Libreria/
+Set PROGS=
+Set PDFVIEWER=
+Set DICTIONARY=C:/Animal_Shelter/A0001/BBDICT/
+Set BBEXT=C:/Bbj/Utils/ext/
+Set BBSTD=C:/BBj/Utils/std/
+Set TEMPLATES=C:/Animal_Shelter/Templates/
+Set IMAGES=C:/Animal_Shelter/Images/
+Set DATA=C:/Animal_Shelter/Data/
+Set DATA_MST=C:/Animal_Shelter/Visits/
+Set DRIVE=C:\
+Set INBOX=C:/Animal_Shelter/In/
+Set OUTBOX=C:/Animal_Shelter/Out/
+Set WORKSPACE=C:/Animal_Shelter/WorkSpace/
+Set PLANES=C:/Animal_Shelter/Plans/
+Set NOTAS=C:/Animal_Shelter/Notes/
+Set GRAFICOS=C:/Animal_Shelter/Graphics/
+Set TEXTOS=C:/Animal_Shelter/Texts/
+Set DIRTEMP=C:/Temp/
+Set BILLEXPORT=C:/Animal_Shelter/Billing/
+Set Ejecutables=C:/Animal_Shelter/Executables/
+Set UPDATES=C:/Animal_Shelter/Updates/
+Set RULES=C:/Animal_Shelter/Rules/
+Set MAPPED_DISK=
+Set SCANNING=C:/Animal_Shelter/Scanning/
+Set SCAN_MANUAL=C:/Animal_Shelter/Scanning/scanner.exe
+Set SCANTEMP=C:/Animal_Shelter/Temp_Scans/
+Set SCANROOT=C:/Animal_Shelter/Scanning/
+Set SCANORIG=C:/Animal_Shelter/Original_Docs/
+Set FIRMAS_GID=C:/Animal_Shelter/Signatures/
+Set DOCS_MED=C:/Animal_Shelter/Medical_Docs/
+Set GLOBAL_UPD=C:/Animal_Shelter/Global/
+Set SUP_AUTO=1
+Set SESSION_TIME=300
+Set BILLPREFIJO=1
+Set INVENTARIO=C:/Animal_Shelter/Inventory/
+Set BUNDLEDIR=C:/Animal_Shelter/Progs/enu/
+Set IDIOMA=en_US
+Set BUNDLENAME=Translations
+Set WEBSERVER=C:/WebServer/htdocs/
+Set PNGTOJPG=C:/ImageMagick/
+Set BBJ_HTDOCS=C:/bbj/htdocs/Animal_Shelter/
+Set WEB_URL=127.0.0.1
+Set BBJDRIVE=C:\
+Set WEB_URL_EXTERNO=127.0.0.1
+Set LOCATION=C:/Animal_Shelter/
+Set MONGOHOST=127.0.0.1
+Set MONGOPORT=27017
+Set JARPATH=C:/java/jdk11/bin/
+Set IMPRESIONES=0
+Set EMAIL_ANT=contact@animalshelter.org
+
+#
+############ Transient Directories (Storage and Send) ######
+#
+Set ROOT=C:/Animal_Shelter/
+Set DATA_COPY=C:/Animal_Shelter/Data/
+Set DATA_MSTCP=C:/Animal_Shelter/Visits/
+Set INBOX_COPY=C:/Animal_Shelter/In/
+Set OUTBOX_COPY=C:/Animal_Shelter/Out/
+Set WORKSPACE_COPY=C:/Animal_Shelter/WorkSpace/
+Set GRAFICOS_COPY=C:/Animal_Shelter/Graphics/
+Set UPDATES_COPY=C:/Animal_Shelter/Updates/
+Set ZIPFILES=C:/Animal_Shelter/ZipFiles/
+Set JOURNAL=C:/Program Files/Windows Journal Viewer/jntview.exe
+Set ACROBAT=C:/Program Files/Adobe/Acrobat/Acrobat.exe
+Set MAGIC=C:/ImageMagick/convert.exe
+Set PDFS=C:/Animal_Shelter/PDFs/
+Set DIRTEMPPDF=C:/Temp/
+Set BILLINGFILE=C:/Animal_Shelter/Billing/
+Set OPENOFFICE_URL=socket,host=127.0.0.1,port=8200
+Set OPENOFFICE_DOC=C:/Animal_Shelter/PrintMerge/
+Set CHECK_IN=C:/Animal_Shelter/Data/
+#
+##################       Error Emails      ##################
+#
+Set MAILSERVER=127.0.0.1
+Set MAILFROM=admin@animalshelter.org
+Set MAILTO=support@animalshelter.org
+Set USERNAME=admin@animalshelter.org
+Set PASSWORD=password123
+Set EMAIL_ANT1=support1@animalshelter.org
+Set EMAIL_ANT2=support2@animalshelter.org
+    
+#
+# Peripheral Aliases
+ALIAS X0 SYSGUI
+ALIAS T0 SYSWINDOW "" INVISIBLE
+ALIAS T1 SYSWINDOW "" TITLE="Extra Window"
+ALIAS T2 SYSWINDOW "" INVISIBLE 
+ALIAS D0 SYSPLOT ""
+ALIAS LP SYSPRINT "" COLS=132,ROWS=62,ZOOM=2,FONT="Courier",SETUP,PREVIEW
+ALIAS LP1 SYSPRINT "" COLS=80,ROWS=62,FONT="Courier",SETUP,PREVIEW
+ALIAS PU PU.txt "Printer Unform" COLS=250,ROWS=62,LOCK=PU.lck,O_CREATE,O_TRUNC,EXECOFF="C:/Animal_Shelter/Printer/print.exe"
+ALIAS PD SYSPRINT "" COLS=80,ROWS=62,PREVIEW,FONT="Courier"
+ALIAS JSERVLET com.basis.server.jetty.servlet.BBjServletPlugin "SERVLET"
+#
+# Disabled Drives
+#
+DSKSYN A:
+DSKSYN B:
+DSKSYN D:
+DSKSYN E:
+DSKSYN G:
+DSKSYN H:
+DSKSYN I:
+DSKSYN J:
+DSKSYN K:
+DSKSYN L:
+DSKSYN M:
+DSKSYN N:
+DSKSYN O:
+DSKSYN P:
+DSKSYN Q:
+DSKSYN R:
+DSKSYN S:
+DSKSYN T:
+DSKSYN U:
+DSKSYN V:
+DSKSYN W:
+DSKSYN X:
+DSKSYN Y:
+DSKSYN Z:
+SQL=C:/Animal_Shelter/A0001/Config/sql.ini

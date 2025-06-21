@@ -1,0 +1,319 @@
+REM ************** IMPRESION DE ANIMALES - HTML *******
+
+rem ENTER ID$
+
+Rem Funciones
+REM Def FNT$(VAR$)="("+VAR$(1,3)+")"+VAR$(4,3)+"-"+VAR$(7)
+REM Def FND$(VAR$)=VAR$(5,2)+"/"+VAR$(7,2)+"/"+VAR$(1,4)
+REM Def FNSS$(VAR$)=VAR$(1,3)+"-"+VAR$(4,2)+"-"+VAR$(6)
+REM Def FNDD$(VAR$)=VAR$(3,2)+"/"+VAR$(1,2)+"/"+VAR$(5)
+REM Def FNDN$(VAR$)=VAR$(1,2)+"/"+VAR$(3,2)+"/"+VAR$(5)
+REM Def FNX(VAR$)=INT((COLS-LEN(VAR$))/2)
+REM Def FNJ(VAR$)=JUL(NUM(VAR$(1,4)),NUM(VAR$(5,2)),NUM(VAR$(7,2)))
+
+Rem Init Code
+Gosub Inicializa_Objetos
+Gosub Constantes_HTML 
+ 
+Declare BBjVector hashProp!
+hashProp! = bbjapi().makeVector()
+
+GOSUB Headings_HTML_original
+Gosub Print_Detalle_HTML
+Gosub FIN_PROGRAMA_HTML
+
+rem *********** Determina si es nueva página **************
+Ver_Espacio_HTML:
+
+    If L>=580 Then 
+        Gosub Headings_HTML_original
+    EndIf
+
+Return
+
+REM +*** IMPRIME LINEA DIVISION ********************+
+Print_Division_HTML:
+    Print(cnHTML)P7$
+    Dim P7$(Cols)
+Return
+
+    Gosub Ver_Espacio_HTML
+    Division!=myPage1!.newParagraph()
+    Division!.setTextColor(myAPI!.makeColor("BLUE"))
+    Division!.setHorizontalFill(1)
+    Division!.setPosition(new java.awt.Point(5,L))
+    Division!.setText(P7$)
+    Division!.setFont(bigboldfont!)
+    myPage1!.add(Division!)
+    L=L+16
+    Dim P7$(Cols)
+    Desc1$=""
+
+Return
+
+REM +*** IMPRIME LINEA SUB DIVISION ********************+
+Print_SubDivision_HTML:
+    Print(cnHTML)P7$
+    Dim P7$(Cols)
+Return
+
+    Gosub Ver_Espacio_HTML
+    SubDivision!=myPage1!.newParagraph()
+    SubDivision!.setHorizontalFill(1)
+    SubDivision!.setPosition(new java.awt.Point(5,L))
+    SubDivision!.setText(P7$)
+    SubDivision!.setFont(boldfont!)
+    myPage1!.add(SubDivision!)
+    L=L+14
+    Dim P7$(Cols)
+    Desc1$=""
+
+Return
+
+
+REM +*** IMPRIME LINEA DETALLE ********************+
+Print_Detalle_HTML:
+    Print(cnHTML)P7$
+    Dim P7$(Cols)
+Return
+
+    Gosub Ver_Espacio_HTML
+    Detalle!=myPage1!.newParagraph()
+    Detalle!.setHorizontalFill(1)
+    Detalle!.setPosition(new java.awt.Point(5,L))
+    Detalle!.setText(P7$)
+    Detalle!.setFont(textfont!)
+    myPage1!.add(Detalle!)
+    L=L+14
+    Dim P7$(Cols)
+
+Return
+
+
+Rem +********* Headings ************************+
+Headings_HTML_original:
+REM Page
+
+
+    Headings_HTML:
+
+    rem Images$=STBL("IMAGES")
+    rem Call"_repl.utl",Images$,"\","/"
+    rem Images$="file:///"+Images$
+
+    Print(cnHTML)"<table border=""0"" cellpadding=""0px"" cellspacing=""0px"">"
+ 
+        rem Print(cnHtml)"<tr><td rowspan=""5""><img width=""80"" height=""80"" src ="""+Images$+"Logo.jpg""></td></tr>"
+  
+        rem Print(cnHtml)"<tr><td rowspan=""5""><img width=""80"" height=""80"" src =""Logo"+STBL("DATABASE")+".jpg""></td></tr>"
+
+    Print(cnHtml)"<p>Hello World!!</p>"
+    Print(cnHtml)"</table>"
+    Print(cnHtml)"<div align=""center"" style =""color: blue;font-size: 150%""><b>Perros</b></div>"
+    
+    Return
+    
+    P=P+1
+    If P>1 Then  
+        myPage1!=myFormHTML!.createPage()
+    EndIf
+
+REM Image
+    image1!=myPage1!.newImage()
+    image1!.setFile("C:/Animal_Shelter/Images/logo.jpg")
+    image1!.setPosition(new java.awt.Point(0,0))
+    image1!.setWidth(80)
+    image1!.setHeight(80)
+    myPage1!.add(image1!)
+
+REM Text
+
+    title1!=myPage1!.newParagraph()
+    title1!.setHorizontalFill(1)
+    title1!.setPosition(new java.awt.Point(100,0))
+    title1!.setText("Animales")
+    title1!.setFont(largefont!)
+     
+    title5!=myPage1!.newParagraph()
+    title5!.setHorizontalFill(1)
+    title5!.setText("RÉGIMEN TERAPÉUTICO")
+    title5!.setPosition(new java.awt.Point(1,80))
+    title5!.setHorizontalAlignment(title5!.CENTER_JUSTIFIED)
+    title5!.setFont(largefont!)
+    
+    stitle1!=myPage1!.newParagraph()
+    stitle1!.setHorizontalFill(1)
+    stitle1!.setPosition(new java.awt.Point(700,1))
+    stitle1!.setText("Página: ")
+    stitle1!.setFont(boldfont!)
+
+    stitle7!=myPage1!.newParagraph()
+    stitle7!.setHorizontalFill(1)
+    stitle7!.setPosition(new java.awt.Point(750,1))
+    stitle7!.setText(Str(P))
+    stitle7!.setFont(textfont!)
+
+    titleline1!=myPage1!.newLine()
+    titleline1!.setRelative(0)
+    titleline1!.setPosition(new java.awt.Point(10,120))
+    titleline1!.setEndPoint(new java.awt.Point(780,120))
+    titleline1!.setThickness(1)
+
+    titleline2!=myPage1!.newLine()
+    titleline2!.setRelative(0)
+    titleline2!.setPosition(new java.awt.Point(93,150))
+    titleline2!.setEndPoint(new java.awt.Point(93,680))
+    titleline2!.setThickness(1)
+
+    titleline3!=myPage1!.newLine()
+    titleline3!.setRelative(0)
+    titleline3!.setPosition(new java.awt.Point(175,150))
+    titleline3!.setEndPoint(new java.awt.Point(175,680))
+    titleline3!.setThickness(1)
+
+    titleline4!=myPage1!.newLine()
+    titleline4!.setRelative(0)
+    titleline4!.setPosition(new java.awt.Point(260,150))
+    titleline4!.setEndPoint(new java.awt.Point(260,680))
+    titleline4!.setThickness(1)
+
+    titleline5!=myPage1!.newLine()
+    titleline5!.setRelative(0)
+    titleline5!.setPosition(new java.awt.Point(360,150))
+    titleline5!.setEndPoint(new java.awt.Point(360,680))
+    titleline5!.setThickness(1)
+    
+    titleline6!=myPage1!.newLine()
+    titleline6!.setRelative(0)
+    titleline6!.setPosition(new java.awt.Point(440,150))
+    titleline6!.setEndPoint(new java.awt.Point(440,680))
+    titleline6!.setThickness(1)
+
+    titleline7!=myPage1!.newLine()
+    titleline7!.setRelative(0)
+    titleline7!.setPosition(new java.awt.Point(585,150))
+    titleline7!.setEndPoint(new java.awt.Point(585,680))
+    titleline7!.setThickness(1)
+
+    titleline8!=myPage1!.newLine()
+    titleline8!.setRelative(0)
+    titleline8!.setPosition(new java.awt.Point(730,150))
+    titleline8!.setEndPoint(new java.awt.Point(730,680))
+    titleline8!.setThickness(1)
+
+
+    myPage1!.add(image1!)
+    myPage1!.add(title5!)
+    
+    myPage1!.add(stitle1!)
+    myPage1!.add(stitle7!)
+
+    myPage1!.add(titleline1!)
+    myPage1!.add(titleline2!)
+    myPage1!.add(titleline3!)
+    myPage1!.add(titleline4!)
+    myPage1!.add(titleline5!)
+    myPage1!.add(titleline6!)
+    myPage1!.add(titleline7!)
+    myPage1!.add(titleline8!)   
+
+    L=120
+
+Return
+
+FIN_PROGRAMA_HTML: 
+
+ Print(cnHtml)"</table></body></html>"
+ close(cnHtml)
+
+  myFormHTML!.print()
+rem  myFormHTML!.preview()
+  Goto FinProceso_HTML
+
+FinProceso_HTML:
+
+rem EXIT 
+
+return 
+
+Rem ********** Objetos de impresión PDF *************
+Inicializa_Objetos:
+    
+
+    USE java.lang.Float
+    DECLARE BBjNumber x!
+    DECLARE BBjNumber y!
+    DECLARE BBjNumber w!
+    DECLARE BBjNumber h!
+
+    myAPIHTML!=BBjAPI()
+    rem Server!=myAPIHTML!.getInterpreterServer()
+
+    requestAttributesHTML!=new javax.print.attribute.HashPrintRequestAttributeSet()
+    requestAttributesHTML!.add(javax.print.attribute.standard.MediaSizeName.NA_LETTER)
+    requestAttributesHTML!.add(javax.print.attribute.standard.OrientationRequested.LANDSCAPE)
+
+    units=javax.print.attribute.standard.MediaPrintableArea.INCH
+    
+    x!=new Float(0.3).floatValue()
+    y!=new Float(0.3).floatValue()
+    w!=new Float(7.9).floatValue()
+    h!=new Float(10.4).floatValue()
+    a!=new javax.print.attribute.standard.MediaPrintableArea(x!,y!,w!,h!,units)
+    requestAttributesHTML!.add(a!)
+
+    cnHtml= unt
+    REM Create the PDF object 
+    myPDFHTML$ = "C:\Animal_Shelter\HTML\index.html"
+    
+    javaFile! = new java.io.File(myPDFHTML$)
+
+    REM Chequea si existe el pdf, si existe lo borra
+    IF javaFile!.exists() THEN
+        PRINT "File exists!"
+        IF javaFile!.delete() THEN
+            PRINT "File borrado."
+        ELSE
+            PRINT "Hubo una falla al borrar el file."
+        ENDIF
+    ELSE
+        PRINT "El file no existe."
+    ENDIF
+    
+    myFormHTML!=myAPIHTML!.getBBjPDFForm(myPDFHTML$,requestAttributesHTML!,0) 
+    Open(cnHtml)myPDFHTML$
+    
+    Print (cnHtml)"<body><head><title>Animal!</title></head><body>"
+    
+    rem IF NUM(INFO(3,6))>0 THEN TC=1 ELSE TC=0
+    
+    rem LET myBBjPrinterHTML!=myAPIHTML!.getBBjPrinter(TC)
+   rem  myBBjPrinterHTML!.setAttributes(requestAttributesHTML!)
+  rem   LET myFormHTML!=myBBjPrinterHTML!.getForm(0)
+    
+     myPage1!=myFormHTML!.createPage() 
+    
+Return
+
+REM ********* DEFINE CONSTANTES *****************
+Constantes_HTML:
+
+    let textfont!= new java.awt.Font("Courier",java.awt.Font.PLAIN,10)
+    let boldfont!=new java.awt.Font("Courier",java.awt.Font.BOLD,10)
+    let titlefont!=new java.awt.Font("Courier",java.awt.Font.BOLD,11)
+    let bigboldfont!=new java.awt.Font("Times New Roman",java.awt.Font.BOLD,12)
+    let largefont!=new java.awt.Font("Times New Roman",java.awt.Font.BOLD,16)
+    let italicFont!=new java.awt.Font("Times New Roman",java.awt.Font.ITALIC,10)
+
+    L=0
+    P=0
+    Cols=600
+    Dim P7$(Cols)
+
+    DEF FNT$(VAR$)="("+VAR$(1,3)+")"+VAR$(4,3)+"-"+VAR$(7)
+    DEF FND$(VAR$)=VAR$(5,2)+"/"+VAR$(7,2)+"/"+VAR$(1,4)
+
+    rem Desde$=FND$(Rec.Desde$)
+    rem Hasta$=FND$(Rec.Hasta$)
+
+Return

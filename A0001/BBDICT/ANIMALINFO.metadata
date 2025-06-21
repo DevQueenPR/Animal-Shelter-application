@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="11.0.25" class="java.beans.XMLDecoder">
+ <object class="java.util.ArrayList">
+  <void method="add">
+   <object class="com.basis.util.common.settings.Metadata"/>
+  </void>
+  <void method="add">
+   <object class="java.util.HashMap">
+    <void method="put">
+     <string>ANIMAL_ID</string>
+     <object class="com.basis.util.common.settings.Metadata" id="Metadata0">
+      <void property="itemMap">
+       <void method="put">
+        <string>ALIGN</string>
+        <object class="com.basis.util.common.settings.MetadataItem">
+         <void property="name">
+          <string>ALIGN</string>
+         </void>
+        </object>
+       </void>
+      </void>
+     </object>
+    </void>
+    <void method="put">
+     <string>ADOPTION_STATUS</string>
+     <object class="com.basis.util.common.settings.Metadata" id="Metadata1">
+      <void property="itemMap">
+       <void method="put">
+        <string>ALIGN</string>
+        <object class="com.basis.util.common.settings.MetadataItem">
+         <void property="name">
+          <string>ALIGN</string>
+         </void>
+        </object>
+       </void>
+      </void>
+     </object>
+    </void>
+    <void method="put">
+     <string>COLOR</string>
+     <object class="com.basis.util.common.settings.Metadata" id="Metadata2">
+      <void property="itemMap">
+       <void method="put">
+        <string>ALIGN</string>
+        <object class="com.basis.util.common.settings.MetadataItem">
+         <void property="name">
+          <string>ALIGN</string>
+         </void>
+        </object>
+       </void>
+      </void>
+     </object>
+    </void>
+    <void method="put">
+     <string>SIZE</string>
+     <object class="com.basis.util.common.settings.Metadata" id="Metadata3">
+      <void property="itemMap">
+       <void method="put">
+        <string>ALIGN</string>
+        <object class="com.basis.util.common.settings.MetadataItem">
+         <void property="name">
+          <string>ALIGN</string>
+         </void>
+        </object>
+       </void>
+      </void>
+     </object>
+    </void>
+    <void method="put">
+     <string>GENDER</string>
+     <object class="com.basis.util.common.settings.Metadata" id="Metadata4">
+      <void property="itemMap">
+       <void method="put">
+        <string>ALIGN</string>
+        <object class="com.basis.util.common.settings.MetadataItem">
+         <void property="name">
+          <string>ALIGN</string>
+         </void>
+        </object>
+       </void>
+      </void>
+     </object>
+    </void>
+    <void method="put">
+     <string>BREED</string>
+     <object class="com.basis.util.common.settings.Metadata" id="Metadata5">
+      <void property="itemMap">
+       <void method="put">
+        <string>ALIGN</string>
+        <object class="com.basis.util.common.settings.MetadataItem">
+         <void property="name">
+          <string>ALIGN</string>
+         </void>
+        </object>
+       </void>
+      </void>
+     </object>
+    </void>
+    <void method="put">
+     <string>TYPE</string>
+     <object class="com.basis.util.common.settings.Metadata" id="Metadata6">
+      <void property="itemMap">
+       <void method="put">
+        <string>ALIGN</string>
+        <object class="com.basis.util.common.settings.MetadataItem">
+         <void property="name">
+          <string>ALIGN</string>
+         </void>
+        </object>
+       </void>
+      </void>
+     </object>
+    </void>
+    <void method="put">
+     <string>HEALTH_INFO</string>
+     <object class="com.basis.util.common.settings.Metadata" id="Metadata7">
+      <void property="itemMap">
+       <void method="put">
+        <string>ALIGN</string>
+        <object class="com.basis.util.common.settings.MetadataItem">
+         <void property="name">
+          <string>ALIGN</string>
+         </void>
+        </object>
+       </void>
+      </void>
+     </object>
+    </void>
+    <void method="put">
+     <string>NAME</string>
+     <object class="com.basis.util.common.settings.Metadata" id="Metadata8">
+      <void property="itemMap">
+       <void method="put">
+        <string>ALIGN</string>
+        <object class="com.basis.util.common.settings.MetadataItem">
+         <void property="name">
+          <string>ALIGN</string>
+         </void>
+        </object>
+       </void>
+      </void>
+     </object>
+    </void>
+    <void method="put">
+     <string>AGE</string>
+     <object class="com.basis.util.common.settings.Metadata" id="Metadata9">
+      <void property="itemMap">
+       <void method="put">
+        <string>ALIGN</string>
+        <object class="com.basis.util.common.settings.MetadataItem">
+         <void property="name">
+          <string>ALIGN</string>
+         </void>
+        </object>
+       </void>
+      </void>
+     </object>
+    </void>
+   </object>
+  </void>
+  <void method="add">
+   <object class="java.util.HashMap"/>
+  </void>
+  <void method="add">
+   <object class="java.util.HashMap"/>
+  </void>
+  <void method="add">
+   <object class="java.util.HashMap"/>
+  </void>
+  <void method="add">
+   <object class="java.util.HashMap"/>
+  </void>
+ </object>
+</java>

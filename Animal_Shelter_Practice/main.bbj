@@ -1,0 +1,1980 @@
+REM ************************************************************
+REM *          Internado DGmed Technology Corporation          *
+REM *     Universidad Interamericana del Recinto de Arecibo    *
+REM *          24 de marzo de 2025 a 2 de mayo de 2025         *
+REM *          Estudiante: Génesis M. Ojeda Rosa               *
+REM ************************************************************
+
+REM * ----------------------------------------------------------------------------------- *
+REM *   Animal Shelter es una aplicación que pretende manejar un shelter de animales.     *
+REM *   En este, se puede crear, leer, modificar y borrar records.                        *
+REM *   Existen varios métodos de impresión, PDF, XML y HTML.                             *
+REM *   Finalmente, los roles se dividen en dos, admin y user.                            *
+REM *   User - Todos los métodos de impresión (sencillo (un record))                      *
+REM *   Admin - Todos los métodos de impresión (sencillo (un record) y compuesto (todos)  *
+REM * ----------------------------------------------------------------------------------- *
+
+REM ********** Inicializa la interfaz gráfica **************
+
+SYSGUI=UNT
+OPEN (SYSGUI)"X0"
+sysgui! = BBjAPI().getSysGui()
+CONTEXT=NUM(sysgui!.getAvailableContext())
+sysgui!.setContext(CONTEXT)
+
+rem *************Variables Globales ************************
+
+    TRUE=1
+    FALSE=0
+    EDITAR = FALSE 
+    ADMIN = False
+    User = TRUE
+    HTML_Window = 0
+
+REM ********** Carga el Archivo ARC ************************
+
+Resource$="main.arc"  
+Resource_Id=101
+Resource=sysgui!.resOpen(Resource$)
+window! = sysgui!.createTopLevelWindow(Resource, Resource_Id)
+
+REM ********** Controles de fields principales **************************
+
+Name! = window!.getControl("Name")     
+Age! = window!.getControl("Age")
+Type! = window!.getControl("Type")
+Gender! = window!.getControl("Gender")
+Color! = window!.getControl("Color")
+Size! = window!.getControl("Size")
+Breed! = window!.getControl("Breed")
+AdoptionStatus! = window!.getControl("AdoptionStatus")
+HealthInfo! = window!.getControl("HealthInfo")
+
+REM ********* Controles de ejecución para eventos ***********
+
+list! = window!.getControl("list")
+Crear_Record! = window!.getControl("Crear_Record") ;REM Habilita campos para crear record 
+Insertar! = window!.getControl("Insertar") ; REM Inserta la data
+Insertar!.setVisible(FALSE)
+Editar! = window!.getControl("Editar")
+Borrar! = window!.getControl("Borrar"); REM Borra la data
+Impresion_list! = window!.getControl("Impresion_list"); REM lista que contiene los tipos de impresiones
+Impresion_button! = window!.getControl("Impresion_button")
+Email_button! = window!.getControl("Email_button")
+Html_button! = window!.getControl("Html_button")
+Html_box! = window!.getControl("Html_box")
+Reporte_HTML! = window!.getControl("Reporte_HTML")
+XML_Document! =  window!.getControl("XML_Document")
+Is_admin! = window!.getControl("Is_admin")
+Correo! = window!.getControl("Correo")
+Clear! = window!.getControl("Clear") ;REM Botón de clear 
+cmdSalir! = window!.getControl("cmdSalir") ;REM Botón de salida
+
+REM ********** CallBack para Eventos ************************
+
+list!.setCallback(list!.ON_LIST_SELECT, "Busca_Record") ;REM Busca el index change
+Impresion_list!.setCallback(Impresion_list!.ON_LIST_SELECT, "Tipo_de_Impresion")
+Type!.setCallback(Type!.ON_LIST_SELECT, "Color_Change")
+Is_admin!.setCallback(Is_admin!.ON_LIST_SELECT, "Credenciales")
+Impresion_button!.setCallback(Impresion_button!.ON_BUTTON_PUSH, "Procesar_Impresion")
+Email_button!.setCallback(Email_button!.ON_BUTTON_PUSH, "Enviar_Email")
+Html_button!.setCallback(Html_button!.ON_BUTTON_PUSH, "Pagina_Web")
+Reporte_HTML!.setCallback(Reporte_HTML!.ON_BUTTON_PUSH, "Reporte_HTML")
+XML_Document!.setCallback(Html_button!.ON_BUTTON_PUSH, "XML_Document_Creator")
+Crear_Record!.setCallback(Crear_Record!.ON_BUTTON_PUSH, "Nuevo_Expediente")
+Insertar!.setCallback(Insertar!.ON_BUTTON_PUSH, "Colectar_Campos") ; REM Inserta la data
+Editar!.setCallback(Editar!.ON_BUTTON_PUSH, "Editar_Campos")
+Borrar!.setCallback(Borrar!.ON_BUTTON_PUSH, "Elimina_Data"); REM Borra la data
+Clear!.setCallback(Clear!.ON_BUTTON_PUSH,"Clear_Process")
+cmdSalir!.setCallback(cmdSalir!.ON_BUTTON_PUSH,"APP_CLOSE")
+
+CALLBACK(ON_CLOSE, APP_CLOSE, sysgui!.getContext())
+
+Rem ************ Main Program *******************************
+
+GOSUB Clear_Process
+GOSUB Abrir_Archivos
+GOSUB Process_Area
+
+REM ********** Proceso Principal ****************************
+
+Process_Area:
+    PROCESS_EVENTS
+return 
+
+REM *************** HTML REPORT GENERATOR *******************
+
+Reporte_HTML:
+  
+  REM Validación (USER)
+  IF valorlist$ = "" and user = TRUE THEN 
+    x = msgbox("Favor de elegir un record a imprimir en html")
+    GOTO Process_area 
+  ENDIF
+  
+  Reporte_HTML = TRUE 
+  GOSUB deshabilita_botones
+  
+  REM Validación (ADMIN)
+  IF valorlist$ = "" THEN 
+    Gosub Abrir_Archivos
+    K$ = KEY(Canal2, KNUM=0, END=TerminaHTML)
+  ENDIF 
+  
+   Gosub Inicializa_Objetos
+   Gosub Headings_HTML_original
+    
+  NextRec5:
+   
+    REM lee el record 
+    IF valorlist$ = "" THEN READ RECORD(Canal2, END=FIN_PROGRAMA_HTML) Animal$
+    
+    PRINT (cnHtml)"<tr>"
+    PRINT (cnHtml)"<td>" + Animal$.ANIMAL_ID$ + "</td>"
+    PRINT (cnHtml)"<td>" + Animal$.NAME$ + "</td>"
+    PRINT (cnHtml)"<td>" + Animal$.TYPE$ + "</td>"
+    PRINT (cnHtml)"<td>" + Animal$.BREED$ + "</td>"
+    PRINT (cnHtml)"<td>" + Animal$.GENDER$ + "</td>"
+    PRINT (cnHtml)"<td>" + Animal$.AGE$ + "</td>"
+    PRINT (cnHtml)"<td>" + Animal$.SIZE$ + "</td>"
+    PRINT (cnHtml)"<td>" + Animal$.COLOR$ + "</td>"
+    PRINT (cnHtml)"<td>" + Animal$.ADOPTION_STATUS$ + "</td>"
+    PRINT (cnHtml)"<td>" + Animal$.HEALTH_INFO$ + "</td>"
+    PRINT (cnHtml)"</tr>"
+    
+    IF valorlist$ = "" THEN GOTO NextRec5
+  
+  TerminaHTML: 
+   IF valorlist$ <> "" THEN GOTO FIN_PROGRAMA_HTML
+
+return 
+
+REM REM ************** IMPRESION DE ANIMALES - HTML *******
+
+Headings_HTML_original:
+    Headings_HTML:
+     
+      REM Estilos
+      PRINT (cnHtml)"<!DOCTYPE html>"
+      PRINT (cnHtml)"<html lang='es'>"
+      PRINT (cnHtml)"<head>"
+      PRINT (cnHtml)"<meta charset='UTF-8'>"
+      PRINT (cnHtml)"<title>Reporte de Animales</title>"
+      PRINT (cnHtml)"<style>"
+      PRINT (cnHtml)"  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 40px; }"
+      PRINT (cnHtml)"  h1 { text-align: center; color: #2c3e50; margin-bottom: 40px; }"
+      PRINT (cnHtml)"  table { width: 100%; border-collapse: collapse; background-color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }"
+      PRINT (cnHtml)"  th, td { padding: 12px 16px; text-align: left; }"
+      PRINT (cnHtml)"  th { background-color: #2c3e50; color: white; font-weight: bold; }"
+      PRINT (cnHtml)"  tr:nth-child(even) { background-color: #f2f2f2; }"
+      PRINT (cnHtml)"  tr:hover { background-color: #e0f7fa; }"
+      PRINT (cnHtml)"</style>"
+      PRINT (cnHtml)"</head>"
+      PRINT (cnHtml)"<body>"
+      
+      REM Images
+      PRINT (cnHtml)"<div style='display: flex; align-items: center; margin-bottom: 30px;'>"
+      PRINT (cnHtml)"  <img src='C:/Animal_Shelter/Images/logo.png' alt='Logo de Animal Shelter' style='height: 80px; margin-right: 20px;'>"
+      PRINT (cnHtml)"  <h1 style='margin: 0; color: #2c3e50; font-size: 24px;'>Animal Shelter</h1>"
+      PRINT (cnHtml)"</div>"
+    
+      REM Tabla
+      PRINT (cnHtml)"<h1>Reporte de Animales</h1>"
+      PRINT (cnHtml)"<table border='1' style='width:100%; border-collapse: collapse;'>"
+      PRINT (cnHtml)"<tr>"
+      PRINT (cnHtml)"<th>ID</th>"
+      PRINT (cnHtml)"<th>Name</th>"
+      PRINT (cnHtml)"<th>Type</th>"
+      PRINT (cnHtml)"<th>Breed</th>"
+      PRINT (cnHtml)"<th>Gender</th>"
+      PRINT (cnHtml)"<th>Age</th>"
+      PRINT (cnHtml)"<th>Size</th>"
+      PRINT (cnHtml)"<th>Color</th>"
+      PRINT (cnHtml)"<th>Status</th>"
+      PRINT (cnHtml)"<th>Health Info</th>"
+      PRINT (cnHtml)"</tr>"
+        
+    Return
+
+  Inicializa_Objetos:
+  
+      REM ruta del archivo
+      myPDFHTML$ = "C:/Animal_Shelter/HTML/index.html"
+      javaFile! = new java.io.File(myPDFHTML$)
+  
+      REM Si el archivo existe, eliminarlo
+      IF javaFile!.exists() THEN
+          javaFile!.delete()
+      ENDIF
+  
+      REM Crea el archivo 
+      fileWriter! = new java.io.FileWriter(javaFile!)
+      fileWriter!.close()
+      
+      REM abre un canal
+      cnHtml = unt
+      OPEN (cnHtml)myPDFHTML$ 
+      
+  RETURN
+
+return 
+
+FIN_PROGRAMA_HTML:
+
+    PRINT (cnHtml)"</table>"
+    PRINT (cnHtml)"</body></html>"
+    CLOSE (cnHtml)
+    
+    BatFile$ = "C:/Animal_Shelter/Progs/PdfViewer.bat"
+    html$ = "C:\Animal_Shelter\HTML\index.html"
+
+    thinClient! = BBjAPI().getThinClient()  
+    thinClient!.clientExec(BatFile$ + " """ + html$ + """ &")
+    
+    GOSUB Habilita_botones
+    GOSUB Clear_Process
+    
+Return
+
+REM *************** Variables ****************
+
+Variables:
+
+  ID$ =  Animal$.ANIMAL_ID$
+  Name$ = Animal$.NAME$
+  Type$ = Animal$.TYPE$
+  Breed$ = Animal$.BREED$
+  Gender$ = Animal$.GENDER$
+  Age$ = Animal$.AGE$
+  Size$ = Animal$.SIZE$
+  Color$ = Animal$.COLOR$
+  Status$ = Animal$.ADOPTION_STATUS$
+  Health_info$ = Animal$.HEALTH_INFO$
+  
+return 
+
+REM *************** XML DOCUMENT CREATOR *************
+
+XML_Document_Creator:
+  
+  GOSUB variables
+  
+  IF valorlist$ = "" THEN 
+    x = msgbox("Favor de seleccionar un record")
+    GOTO process_area
+  ENDIF
+  
+  XML = TRUE 
+  GOSUB Deshabilita_Botones
+  
+  REM llamada a XMLDOC.bbj y envio de argumentos
+  CALL "C:/bbj24/demos/Common/XMLDoc.bbj", ID$, Name$, Type$, Breed$, Gender$, Age$, Size$, Color$, Status$, Health_info$, valorlist$
+  
+  REM Feedback al usuario de que se ha generado el XML 
+  x = msgbox("¡El XML ha sido generado!")
+  
+  XML$ = "C:/Animal_Shelter/XML/" + valorlist$ + ".xml"
+  BatFile$ = "C:/Animal_Shelter/Progs/PdfViewer.bat"
+  
+  thinClient! = BBjAPI().getThinClient()
+  thinClient!.clientExec(BatFile$ + " """ + XML$ + """ &")
+  
+  GOSUB Habilita_Botones
+  GOSUB Clear_Process
+  
+  XML = FALSE
+ 
+return 
+
+REM *************** HTML Ventana ******************
+
+REM Crea ventana de HTML
+Pagina_Web:
+
+  pagina_web = TRUE 
+  url$ = Html_box!.getText()
+  
+  REM valida que este no se envie vacio
+  if url$ = "" THEN 
+      x = msgbox("Favor de ingresar un link válido.")
+      GOTO Process_Area
+  ENDIF
+  
+  Tipo$ = "URL"
+  
+  REM Llama a Regex.bbj y envia los argumentos necesarios
+  CALL STBL("PROGS")+ "Regex.bbj", Tipo$, url$, Error
+  
+  REM Valida que el URL no sea inválido
+  IF (Error) = 1 THEN
+      x = MSGBOX("URL inválido")
+      GOTO Process_Area
+  ENDIF
+  
+  GOSUB Deshabilita_Botones
+  Html_box!.setEnabled(FALSE)
+  
+  REM Crea el HTMLVIEW
+  IF HTML_Window = 0 THEN
+  
+      htmlview! = window!.addHtmlView(900,25,25,550,450,"",$$)
+      htmlview!.setAutoNavigate(1)
+      htmlview!.setUrl(url$)
+  
+      clientType$ = htmlview!.getClientType()
+      clientVersion$ = htmlview!.getClientVersion()
+      title$ = window!.getTitle() + " " + clientType$ + " " + clientVersion$
+      window!.setTitle(title$)
+  
+      status! = window!.addStatusBar(99)
+      window!.setCallback(window!.ON_CLOSE,"eoj")
+  
+      REM variables control
+      HTML_Window = 1
+      html_visible = 1
+  
+  ELSE
+  
+      REM Reutiliza el HtmlView y solo cambia el URL y visibilidad
+      htmlview!.setUrl(url$)
+      Html_box!.setEnabled(FALSE)
+      
+      IF html_visible = 1 THEN
+          htmlview!.setVisible(0)
+          html_visible = 0
+          Html_box!.setText("")
+          GOSUB Habilita_Botones
+      ELSE
+          htmlview!.setVisible(1)
+          html_visible = 1
+      ENDIF
+      
+      pagina_web = False
+      
+  ENDIF
+
+RETURN
+
+REM ****** Abrir Archivos y leer template********************
+
+Abrir_Archivos:
+
+    REM Crea la ruta 
+    PATH$ = "C:/Animal_Shelter/A0001/Data/ANIMALINFO" 
+    REM Template de AnimalInfo Table
+    T_ANIMAL$ = "ANIMAL_ID:C(10),TYPE:C(10),BREED:C(50),NAME:C(50),AGE:C(2),GENDER:C(1),SIZE:C(10),COLOR:C(30),ADOPTION_STATUS:C(20),HEALTH_INFO:C(100)"
+    Dim Animal$:T_ANIMAL$ ;REM dimensiona el template de AnimalInfo
+    
+    REM Abre los Canales
+    
+    Canal1 = UNT         ;REM Canal de Cargar la lista
+    OPEN(Canal1, ERR=ERROR_ROUTINE) PATH$
+    
+    Canal2 = UNT         ;REM Canal de Cargar la lista
+    OPEN(Canal2, ERR=ERROR_ROUTINE) PATH$
+    
+    Canal3= UNT          ;REM Canal de Buscar el record según el ID seleccionado
+    OPEN(Canal3, ERR=ERROR_ROUTINE) PATH$
+    
+    Canal4 = UNT        ;REM Canal de Buscar el ultimo ID 
+    OPEN(Canal4, ERR= ERROR_ROUTINE) PATH$
+    
+    Canal5 = UNT        ;REM Canal de Insertar datos 
+    OPEN(Canal5, ERR= ERROR_ROUTINE) PATH$
+    
+    Canal6 = UNT        ;REM Canal de Borrar datos 
+    OPEN(Canal6, ERR= ERROR_ROUTINE) PATH$
+    
+    Canal7 = UNT        ;REM Canal de Editar datos 
+    OPEN(Canal7, ERR= ERROR_ROUTINE) PATH$
+    
+    Canal8 = UNT        ;REM Canal de Editar datos 
+    OPEN(Canal8, ERR= ERROR_ROUTINE) PATH$
+    
+return
+
+
+REM ************* Carga la lista (IDs) ***************************
+
+Carga_Lista:
+
+    REM Declaración de variables
+    Indice_Animales$ = ""            
+    Secuencia = 0
+                           
+    REM Loop que busca los records disponibles
+    NextRec2:
+    K$ = Key(Canal2, KNUM=0, END=Termine)
+    READ RECORD (Canal2) Animal$
+    
+    list!.addItem(Animal$.ANIMAL_ID$)
+    
+    If Indice_Animales$ = "" Then
+        Indice_Animales$ = STR(Animal$.ANIMAL_ID$)
+    Else
+        Indice_Animales$ = Indice_Animales$ + "," + STR(Animal$.ANIMAL_ID$)
+    EndIf
+    
+    Secuencia = Secuencia + 1
+
+    GOTO NextRec2
+
+Termine:
+    
+    Gosub Cargar_List_Buttons
+    Gosub Cerrar_Archivos  
+    
+Return
+
+REM ************ Carga list buttons (predetermininados) *****************************
+
+Cargar_List_Buttons: 
+
+REM ------------------- TYPE -----------------------
+
+REM verifica cual es el item actual
+  type_actual$ = Type!.getText()
+
+REM crea un vector con los items que se desean 
+  vector! = bbjapi().makeVector()
+  vector!.add("Dog")
+  vector!.add("Cat")
+  vector!.add("Bunny")
+  vector!.add("Fish")
+  vector!.add("Bird")
+
+REM añade cada Item del vector a Type 
+  Type!.removeAllItems()
+  
+  FOR i = 0 TO vector!.size() - 1
+      Type!.addItem(vector!.getItem(INT(i)))
+  NEXT i
+
+REM Selecciona el index del item que está seleccionado en la DB
+  IF type_actual$ <> "" THEN
+      FOR i = 0 TO Type!.getItemCount() - 1
+          IF Type!.getItemAt(i) = type_actual$ THEN
+              Type!.selectIndex(i)
+              BREAK
+          ENDIF
+      NEXT i
+  ENDIF
+
+REM -------------------------- GENDER -------------------------------
+
+REM obtiene el item seleccionado
+  gender_actual$ = Gender!.getText()
+
+REM crea un vector a base de los items determinados 
+  vector2! = bbjapi().makeVector()
+  vector2!.add("M")
+  vector2!.add("F")
+
+REM remueve los items y los reincerta con la data del vector
+  gender!.removeAllItems()
+  FOR i = 0 TO vector2!.size() - 1
+      Gender!.addItem(vector2!.getItem(INT(i)))
+  NEXT i
+
+REM Selecciona el valor que estaba seleccionado en la DB
+  IF gender_actual$ <> "" THEN
+      FOR i = 0 TO Gender!.getItemCount() - 1
+          IF Gender!.getItemAt(i) = gender_actual$ THEN
+              Gender!.selectIndex(i)
+              BREAK
+          ENDIF
+      NEXT i
+  ENDIF
+
+REM ---------------------- COLOR CHANGE ---------------------------
+
+  GOSUB Color_Change
+
+REM --------------------- ADOPTION STATUS --------------------------
+
+REM Selecciona el texto actual
+  status_actual$ = AdoptionStatus!.getText()
+
+REM crea un vector con la info determinada 
+  vector4! = bbjapi().makeVector()
+  vector4!.add("Adopted")
+  vector4!.add("Available")
+  vector4!.add("Fostered")
+
+REM agrega cada item del vector 
+  AdoptionStatus!.removeAllItems()
+  
+  FOR i = 0 TO vector4!.size() - 1
+      AdoptionStatus!.addItem(vector4!.getItem(INT(i)))
+  NEXT i
+
+REM Selecciona el status actual que esta en la db 
+  IF status_actual$ <> "" THEN
+      FOR i = 0 TO AdoptionStatus!.getItemCount() - 1
+          IF AdoptionStatus!.getItemAt(i) = status_actual$ THEN
+              AdoptionStatus!.selectIndex(i)
+              BREAK
+          ENDIF
+      NEXT i
+  ENDIF
+
+REM ---------------------------- SIZE --------------------------
+
+REM selecciona el size del texto
+  size_actual$ = Size!.getText()
+
+REM Crea un vector con los items predeterminados
+  vector5! = bbjapi().makeVector()
+  vector5!.add("Small")
+  vector5!.add("Medium")
+  vector5!.add("Large")
+
+REM Agrega cada item del vector al objeto de Size
+  Size!.removeAllItems()
+  FOR i = 0 TO vector5!.size() - 1
+      Size!.addItem(vector5!.getItem(INT(i)))
+  NEXT i
+
+REM Selecciona el item seleccionado que está en la DB 
+  IF size_actual$ <> "" THEN
+      FOR i = 0 TO Size!.getItemCount() - 1
+          IF Size!.getItemAt(i) = size_actual$ THEN
+              Size!.selectIndex(i)
+              BREAK
+          ENDIF
+      NEXT i
+  ENDIF
+
+REM ------------------------- HEALTH INFORMATION -----------------
+
+REM busca el texto que contiene el healthinfo 
+  health_actual$ = HealthInfo!.getText()
+
+REM crea un vector con items predeterminados
+  vector6! = bbjapi().makeVector()
+  vector6!.add("Healthy")
+  vector6!.add("Sick")
+  vector6!.add("Injured")
+  vector6!.add("Recovering")
+  vector6!.add("Unknown")
+
+REM Agrega los items del vector con items predeterminados
+  HealthInfo!.removeAllItems()
+  FOR i = 0 TO vector6!.size() - 1
+      HealthInfo!.addItem(vector6!.getItem(INT(i)))
+  NEXT i
+
+REM Selecciona el indice actual
+  IF health_actual$ <> "" THEN
+      FOR i = 0 TO HealthInfo!.getItemCount() - 1
+          IF HealthInfo!.getItemAt(i) = health_actual$ THEN
+              HealthInfo!.selectIndex(i)
+              BREAK
+          ENDIF
+      NEXT i
+  ENDIF
+
+return
+
+REM ****************** COLOR CHANGE ****************************
+
+Color_Change: 
+
+REM Toma el texto actual de Color y Type
+  color_actual$ = Color!.getText()
+  type_actual$ = Type!.getText()
+
+REM crea el vector 
+  vector3! = bbjapi().makeVector()
+
+Rem validaciones para los colores según el tipo actual (Dog, Cat, Bird, Bunny, Fish)
+  IF type_actual$ = "Dog" THEN 
+    vector3!.add("White")
+    vector3!.add("Black")
+    vector3!.add("Brown")
+    vector3!.add("Beige")
+    vector3!.add("Gray")
+    vector3!.add("Mixed")
+  ENDIF
+  IF type_actual$ = "Cat" THEN 
+    vector3!.add("White")
+    vector3!.add("Black")
+    vector3!.add("Brown")
+    vector3!.add("Gray")
+    vector3!.add("Orange")
+    vector3!.add("Mixed")
+  ENDIF
+  IF type_actual$ = "Bunny" THEN 
+    vector3!.add("White")
+    vector3!.add("Black")
+    vector3!.add("Brown")
+    vector3!.add("Gray")
+    vector3!.add("Mixed")
+  ENDIF
+  IF type_actual$ = "Fish" THEN 
+    vector3!.add("Blue")
+    vector3!.add("Red")
+    vector3!.add("Yellow")
+    vector3!.add("Green")
+    vector3!.add("Mixed")
+  ENDIF
+  IF type_actual$ = "Bird" THEN 
+    vector3!.add("Blue")
+    vector3!.add("Orange")
+    vector3!.add("Yellow")
+    vector3!.add("Green")
+    vector3!.add("Mixed")
+  ENDIF
+  
+  REM validación de que se elija un tipo de animal
+  IF type_actual$ = "" THEN 
+    vector3!.add("Elegir que tipo de animal se desea")
+  ENDIF
+
+REM Agrega los items del vector creado
+  IF type_actual$ <> "" THEN 
+    Color!.removeAllItems()
+    FOR i = 0 TO vector3!.size() - 1
+        Color!.addItem(vector3!.getItem(INT(i)))
+    NEXT i
+ 
+REM Selecciona el index que fue seleccionado y trajo de la DB 
+
+    IF color_actual$ <> "" THEN
+        FOR i = 0 TO Color!.getItemCount() - 1
+            IF Color!.getItemAt(i) = color_actual$ THEN
+                Color!.selectIndex(i)
+                BREAK
+            ENDIF
+        NEXT i
+    ENDIF
+  ENDIF
+
+REM ************************ Carga lista de impresion **************************
+
+  GoSUB Tipo_de_Impresion
+
+
+REM ************************ Carga lista de Credenciales **************************
+
+  GOSUB Credenciales
+
+return 
+
+
+REM ************************ Busca un record **************************************
+
+Busca_Record:
+
+REM Inserta el valor de valorList y le pone padding  
+  ValorList$=list!.getText()
+  ValorList$ = STR(NUM(ValorList$):"0000000000")
+
+REM Abre el canal y busca el record segun el valor que fue dado
+  Find Record (Canal3,Knum=0,Key=ValorList$,Dom=No_Existe)Animal$
+    
+  Existe:
+     Gosub Desplegar_Campos
+     Gosub Cargar_List_Buttons
+  
+  No_Existe:
+  
+     Name!.focus()
+     Goto Salida_Busca
+  
+  Error_Busca:
+  
+     list!.setText("")
+     list!.focus()
+  
+  Salida_Busca:
+
+return
+
+REM ************* Tipo de impresion *************************************
+
+Tipo_de_Impresion:
+
+REM añade los items predeterminados a la lista
+
+    Impresion_list$ = Impresion_List!.getText()
+
+  IF Impresion_list$ = ""  and Admin = TRUE THEN 
+      impresion_list!.removeAllItems()
+      impresion_list!.addItem("Un record")
+      impresion_list!.addItem("Records (Portrait)")
+      impresion_list!.addItem("Records (Landscape)")
+      Impresion_button!.setEnabled(FALSE)
+  ENDIF
+  
+  IF Impresion_list$ = ""  and User = TRUE THEN 
+      impresion_list!.removeAllItems()
+      impresion_list!.addItem("Un record")
+      Impresion_button!.setEnabled(FALSE)
+  ELSE 
+    Impresion_button!.setEnabled(TRUE)
+  
+  ENDIF 
+
+return 
+
+REM ************* Procesar impresion *************************************
+
+Procesar_Impresion:
+
+  indice = impresion_list!.getSelectedIndex()
+  
+  IF valorlist$ = "" and User = TRUE THEN 
+    x = msgbox("Favor de elegir un record")
+    GOTO process_area
+  ENDIF
+  
+  REM Validación que User tenga un record seleccionado
+  IF indice = 0 and admin = TRUE and valorlist$ = "" THEN 
+    x = msgbox("Favor de elegir un record")
+    GOTO process_area
+  ENDIF
+  
+  REM Impresión de un solo record
+  IF indice = 0 THEN
+      impresion_list!.setShortCue("Impresión de un Record")
+      GOSUB Pantalla_Impresion 
+      GOSUB Clear_Process
+  ENDIF
+  
+  REM Impresión de varios records en modo Portrait
+  IF indice = 1 THEN
+      impresion_list!.setShortCue("Impresión de Record (Portrait)")
+      GOSUB Pantalla_Impresion_Total 
+  ENDIF
+  
+   REM Impresión de varios records en modo Landscape
+  IF indice = 2 THEN
+      impresion_list!.setShortCue("Impresión de Record (Landscape)")
+      GOSUB Pantalla_Impresion_Landscape
+  ENDIF
+
+return
+
+REM ************ Pantalla de impresion total *****************************
+
+Pantalla_Impresion_Total:
+
+  Impresion_Total = TRUE 
+  GOSUB Pantalla_Impresion
+  Impresion_Total = FALSE 
+  GOSUB Clear_Process
+
+return 
+
+REM ************ Pantalla de impresion total landscape *****************************
+
+Pantalla_Impresion_Landscape:
+
+  Impresion_Total_Landscape = TRUE 
+  GOSUB Pantalla_Impresion
+  Impresion_Total_Landscape = FALSE 
+  GOSUB Clear_Process
+  
+return 
+
+
+REM ************ Pantalla de impresion (donde realiza la impresión) *****************************
+
+Pantalla_Impresion:
+
+REM Obtiene que tipo de impresión se desea
+
+REM validación
+  If Impresion = True Then
+  REM     IF User = TRUE THEN GOTO 498
+      If ValorList$ = "" Then
+          msg = MsgBox("Por favor seleccionar un Record a imprimir en PDF")
+          GoTo Clear_Process
+      EndIf
+      
+      REM Busca el ID 
+      ValorList$ = list!.getText()
+      
+      REM aplica el masking
+      ValorList$ = STR(NUM(ValorList$):"0000000000")
+      
+      myPDF$ = "C:\Animal_Shelter\PDFs\" + "ID_" + ValorList$ + ".pdf"
+      
+  EndIf
+
+REM Nombre del archivo según el tipo de impresión
+  If Impresion_Total = TRUE Then
+      ValorList$ = "Impresion_Total"
+  ENDIF
+  
+  IF Impresion_Total_Landscape = TRUE then 
+      ValorList$ = "Impresion_Total_Landscape"
+  EndIf
+
+  myPDF$ = "C:\Animal_Shelter\PDFs\" + ValorList$ + ".pdf"
+
+REM Remplaza el / a \ ()
+  NEWPDF$ = ""
+  FOR I = 1 TO LEN(myPDF$)
+      CHR$ = myPDF$(I, 1)
+      IF CHR$ = "/" THEN
+          NEWPDF$ = NEWPDF$ + "\"
+      ELSE
+          NEWPDF$ = NEWPDF$ + CHR$
+      ENDIF
+  NEXT I
+  myPDF$ = NEWPDF$
+
+REM Define constantes de texto 
+Constantes:
+    REM Font definitions
+    let textfont! = new java.awt.Font("Courier", java.awt.Font.PLAIN, 10)
+    let boldfont! = new java.awt.Font("Courier", java.awt.Font.BOLD, 10)
+    let titlefont! = new java.awt.Font("Courier", java.awt.Font.BOLD, 11)
+    let bigboldfont! = new java.awt.Font("Times New Roman", java.awt.Font.BOLD, 12)
+    let largefont! = new java.awt.Font("Times New Roman", java.awt.Font.BOLD, 16)
+    let italicFont! = new java.awt.Font("Times New Roman", java.awt.Font.ITALIC, 10)
+
+    REM Layout settings
+    L = 0
+    P = 0
+    Cols = 600
+    Col = 90
+    Dim P7$(Cols)
+
+  GOSUB Abrir_Archivos
+
+REM ****** LOOP PRINCIPAL de Impresión de PDF *****
+
+REM Inilizaliza el API 
+
+    api! = BBjAPI()
+    
+REM Atributos que se le pasan al form
+    requestAttributes! = new javax.print.attribute.HashPrintRequestAttributeSet()
+    requestAttributes!.add(javax.print.attribute.standard.MediaSizeName.NA_LETTER)
+    
+REM Verifica que tipo de impresión es y se le aplica el atributo que se desea 
+    IF Impresion_Total_Landscape = TRUE THEN 
+        requestAttributes!.add(javax.print.attribute.standard.OrientationRequested.LANDSCAPE)
+    ELSE 
+        requestAttributes!.add(javax.print.attribute.standard.OrientationRequested.PORTRAIT)
+    ENDIF
+    
+    units = javax.print.attribute.standard.MediaPrintableArea.INCH
+
+    x! = new Float(0.3).floatValue()
+    y! = new Float(0.3).floatValue()
+    w! = new Float(7.9).floatValue()
+    h! = new Float(10.4).floatValue()
+    a! = new javax.print.attribute.standard.MediaPrintableArea(x!,y!,w!,h!,units)
+    
+    requestAttributes!.add(a!)
+
+    javaFile! = new java.io.File(myPDF$)
+
+REM Chequea si existe el pdf, si existe lo borra
+  IF javaFile!.exists() THEN
+      PRINT "File exists!"
+      IF javaFile!.delete() THEN
+          PRINT "File borrado."
+      ELSE
+          PRINT "Hubo una falla al borrar el file."
+      ENDIF
+  ELSE
+      PRINT "El file no existe."
+  ENDIF
+
+REM crea el formulario con los atributos
+    myForm! = api!.getBBjPDFForm(myPDF$, requestAttributes!, 0)
+
+REM Dimensiona Animal_Gen$ que equivale al template de animal
+  DIM ANIMALS_GEN$:T_ANIMAL$
+  
+  REM si es una impresión sencilla, se toma el valor de ValorList$
+  If Impresion_Total = False and Impresion_Total_Landscape = False Then
+    FIND RECORD(CANAL2, KNUM=0, KEY=ValorList$, Dom=Termina)ANIMALS_GEN$
+  ENDIF
+
+REM Si es una impresión compuesta (portrait or landscape) itera por el record de la db
+  If Impresion_Total = TRUE or Impresion_Total_Landscape = True Then
+  
+    GOSUB Deshabilita_Botones
+    gosub headings
+    
+      Indice_Animales$ = ""            
+      Secuencia = 0
+  
+      If Secuencia = 0 Then
+          REM Imprime el encabezado
+          IF Impresion_Total_Landscape = FALSE THEN  
+            P7$(3) = "ANIMAL ID  NAME       TYPE  BREED             GENDER AGE SIZE   COLOR   STATUS  HEALTH INFO"
+            ELSE 
+            P7$(3) = "ANIMAL ID    NAME        TYPE    BREED                 GENDER     AGE       SIZE     COLOR       STATUS      HEALTH INFO"
+            ENDIF
+            GOSUB Print_Detalle
+            Secuencia = Secuencia + 1
+           EndIf
+  
+      REM Loop que busca los records que tiene la base de datos
+      NextRec4:
+        K$ = Key(Canal2, KNUM=0, END=Termina)
+        READ RECORD(Canal2) Animal$
+        
+        ANIMALS_GEN$ = Animal$
+      
+      REM Eliminar espacios extra de los datos (TRIM con CVS y el 3 elimina espacios de adelante y atrás)
+      
+        IF Impresion_Total = TRUE THEN 
+          animal_spacing = 11
+          name_spacing = 11 
+          type_spacing = 6
+          breed_spacing = 21 
+          gender_spacing = 5 
+          age_spacing = 3
+          size_spacing = 7 
+          color_spacing = 7 
+          status_spacing = 10
+          health_info_spacing = 12
+         ELSE 
+          animal_spacing = 13
+          name_spacing = 12
+          type_spacing = 8
+          breed_spacing = 24
+          gender_spacing = 10
+          age_spacing = 9
+          size_spacing = 9 
+          color_spacing = 12 
+          status_spacing = 12
+          health_info_spacing = 12
+        ENDIF 
+      
+      REM variables que se le quitan los espacios y se agregan según la necesidad 
+      animal_id$ = CVS(STR(ANIMALS_GEN$.Animal_ID$), 3)
+      animal_id$ = animal_id$ + FILL(ABS(animal_spacing - LEN(animal_id$)), " ")
+      
+      Name$ = CVS(ANIMALS_GEN$.Name$, 3)
+      Name$ = Name$ + FILL(ABS(name_spacing - LEN(Name$)), " ")
+      
+      type$ = CVS(ANIMALS_GEN$.Type$, 3)
+      type$ = type$ + FILL(ABS(type_spacing - LEN(type$)), " ")
+      
+      breed$ = CVS(ANIMALS_GEN$.Breed$, 3)
+      breed$ = breed$ + FILL(ABS(breed_spacing - LEN(breed$)), " ")
+      
+      gender$ = CVS(ANIMALS_GEN$.Gender$, 3)
+      gender$ = gender$ + FILL(ABS(gender_spacing - LEN(gender$)), " ")
+      
+      age$ = CVS(ANIMALS_GEN$.Age$, 3)
+      age$ = age$ + FILL(ABS(age_spacing - LEN(age$)), " ")
+      
+      size$ = CVS(ANIMALS_GEN$.Size$, 3)
+      size$ = size$ + FILL(ABS(size_spacing - LEN(size$)), " ")
+      
+      color$ = CVS(ANIMALS_GEN$.Color$, 3)
+      color$ = color$ + FILL(ABS(color_spacing - LEN(color$)), " ")
+      
+      status$ = CVS(ANIMALS_GEN$.Adoption_Status$, 3)
+      status$ = status$ + FILL(ABS(status_spacing - LEN(status$)), " ")
+      
+      health_info$ = CVS(ANIMALS_GEN$.Health_Info$, 3)
+      health_info$ = Health_Info$ + FILL(ABS(health_info_spacing - LEN(Health_Info$)), " ")
+  
+      REM Espacio entre campos
+  
+      linea$ = animal_id$ + Name$ + type$ + breed$ + gender$ + age$ +  size$ + color$ + status$ + health_info$
+  
+      REM Imprime los datos 
+      P7$(3) = linea$
+      GOSUB Print_Detalle
+  
+      Secuencia = Secuencia + 1
+      
+      GOTO NextRec4
+  
+  ENDIF
+
+REM Impresión sencilla
+  If Impresion_Total = FALSE and Impresion_Total_Landscape = FALSE Then
+      Impresion = TRUE
+      GOSUB Deshabilita_Botones
+  
+      Tabla$ = "0000000011"
+      Codigo$ = ANIMALS_GEN$.Adoption_Status$
+      
+      GOSUB HEADINGS
+      
+      P7$(3) = "Nombre : " + ANIMALS_GEN$.NAME$
+      Gosub Print_Detalle
+      
+      P7$(3) = "ANIMAL ID: " + ANIMALS_GEN$.Animal_ID$
+      P7$(70) = "BREED: " + ANIMALS_GEN$.Breed$
+      Gosub Print_Detalle
+      
+      P7$(3) = "TYPE: " + ANIMALS_GEN$.Type$
+      P7$(70) = "GENDER: " + ANIMALS_GEN$.Gender$
+      Gosub Print_Detalle
+      
+      P7$(3) = "AGE: " + ANIMALS_GEN$.Age$
+      P7$(70) = "SIZE: " + ANIMALS_GEN$.Size$
+      Gosub Print_Detalle
+      
+      P7$(3) = "COLOR: " + ANIMALS_GEN$.Color$
+      Gosub Print_Detalle
+      
+      P7$(3) = "HEALTH INFO: " + ANIMALS_GEN$.Health_Info$
+      Gosub Print_Detalle
+      
+      REM Adoption Status
+      P7$(3) = "ADOPTION STATUS: " + ANIMALS_GEN$.Adoption_Status$
+      Gosub Print_Detalle
+  ENDIF
+
+REM Termina el printeo
+Termina:
+   
+  myForm!.print()
+  
+  IF Email = FALSE THEN 
+    Answer=0
+    Titulo$ = "PDF creado"
+    Mensaje$ = "El PDF ha sido creado exitosamente"
+    
+    Answer = MsgBox(Mensaje$, 0 + 64, Titulo$)  ;REM 4 = Botón de ok, 32 = Icono de Información
+    
+    GOSUB GoPDF
+    
+    Impresion_list!.setText("")
+    
+  ENDIF
+  
+    GOSUB Habilita_Botones
+    
+  Else
+      PRINT "Error: PDF form not initialized for ID: ", ValorList$
+      Goto EndProcess
+  EndIf
+  
+  If impresion = TRUE then Impresion = False ENDIF
+    
+EndProcess:
+
+    IF CANAL2 > 0 THEN CLOSE (CANAL2)
+    
+Return
+
+REM ************ GO PDF *******************
+GoPDF:
+
+  thinClient! = bbjapi().getThinClient()
+  
+  BatFile$="C:/Animal_Shelter/Progs/PdfViewer.bat"
+  
+  thinClient!.clientExec(Batfile$+" """+myPDF$+""" &")
+
+Sal_GoPDF:
+
+return 
+
+REM *********** Detalles *******************
+
+Print_Detalle:
+
+    Gosub Ver_Espacio
+
+    Detalle! = myPage1!.newParagraph()
+    Detalle!.setHorizontalFill(1)
+    Detalle!.setPosition(new java.awt.Point(1, L))
+    Detalle!.setText(P7$)
+    myPage1!.add(Detalle!)
+ 
+     if POS("ANIMAL ID"=P7$) > 0 and Impresion = False then
+        Detalle!.setFont(boldfont!)
+    else
+        Detalle!.setFont(textfont!)
+    endif
+ 
+    L = L + 14
+    Dim P7$(Cols)
+    
+Return
+
+Ver_Espacio:
+    If L>740 Then
+        Gosub Headings
+    EndIf
+Return
+
+REM ********* Headings ************************
+Headings:
+
+    P = P + 1
+    myPage1! = myForm!.createPage()     
+
+  REM Text (Header)
+    title1! = myPage1!.newParagraph()
+    title1!.setHorizontalFill(1)
+    title1!.setPosition(new java.awt.Point(10, 20)) 
+    title1!.setFont(largefont!)
+    
+    REM Image
+    image1! = myPage1!.newImage()
+    image1!.setFile("C:/Animal_Shelter/Images/logo.jpg")  ;REM ruta
+    image1!.setPosition(new java.awt.Point(10,25))
+    image1!.setWidth(50)
+    image1!.setHeight(50)
+    myPage1!.add(image1!)
+    
+  REM Reporte
+    title5! = myPage1!.newParagraph()
+    title5!.setHorizontalFill(1)
+    If Impresion_Total = FALSE and Impresion_Total_Landscape = FALSE Then 
+    title5!.setText("REPORTE DE MANTENIMIENTO DEL ANIMAL") 
+    ElSE
+     title5!.setText("REPORTE DE MANTENIMIENTO DE LOS ANIMALES") 
+    ENDIF
+
+    title5!.setPosition(new java.awt.Point(1, 60))
+    title5!.setHorizontalAlignment(title5!.CENTER_JUSTIFIED)
+    title5!.setFont(largefont!)
+    
+REM ajusta las posiciones según el tamaño del papel
+    IF Impresion_Total_Landscape = TRUE THEN 
+        punto1 = 680
+        punto2 = 730
+        punto3 = 550
+        punto4 = 780
+    ELSE
+        punto1 = 460
+        punto2 = 510
+        punto3 = 380
+        punto4 = 600
+        
+     ENDIF
+     
+REM Número de página
+
+    stitle1! = myPage1!.newParagraph()
+    stitle1!.setHorizontalFill(1)
+    stitle1!.setPosition(new java.awt.Point(punto1, 20))
+    stitle1!.setText(("Página:"))
+    stitle1!.setFont(boldfont!)
+
+    stitle7! = myPage1!.newParagraph()
+    stitle7!.setHorizontalFill(1)
+    stitle7!.setPosition(new java.awt.Point(punto2, 20))
+    stitle7!.setText(Str(P))
+    stitle7!.setFont(textfont!)
+
+REM Fecha en que se genera el reporte
+    timestamptitle! = myPage1!.newParagraph()
+    timestamptitle!.setHorizontalFill(1)
+    timestamptitle!.setPosition(new java.awt.Point(punto3, 35))
+    timestamptitle!.setText("Generado en: " + date(0:"%Mz/%Dz/%Yl, %Hz:%mz%P"))
+    timestamptitle!.setFont(boldfont!)
+
+REM Linea separadora (Header)
+    titleline1! = myPage1!.newLine()
+    titleline1!.setRelative(0)
+    titleline1!.setPosition(new java.awt.Point(10, 100))
+    titleline1!.setEndPoint(new java.awt.Point(punto4, 100))
+    titleline1!.setThickness(1)
+
+    myPage1!.add(title1!)
+    myPage1!.add(title5!)
+    myPage1!.add(stitle1!)
+    myPage1!.add(stitle7!)
+    myPage1!.add(timestamptitle!)
+    myPage1!.add(titleline1!)
+
+    REM Aplica el nombre del template según el tipo de impresión
+    If Impresion_Total = TRUE OR Impresion_Total_Landscape = TRUE Then 
+        ANIMALS_GEN$ = ANIMAL$ 
+    ENDIF
+    
+    stitle8! = myPage1!.newParagraph()
+    stitle8!.setHorizontalFill(1)
+    stitle8!.setPosition(new java.awt.Point(13, 130))
+    stitle8!.setText(Nombre$)
+    stitle8!.setFont(boldfont!)
+
+    stitle9! = myPage1!.newParagraph()
+    stitle9!.setHorizontalFill(1)
+    stitle9!.setPosition(new java.awt.Point(415, 130))
+    stitle9!.setText(ID$)
+    stitle9!.setFont(boldfont!)
+
+    myPage1!.add(stitle8!)
+    myPage1!.add(stitle9!)
+
+REM Ajusta el espacio vertical
+    L = 90
+
+return
+
+REM ***************** Enviar Email Regex Validation **********************
+
+Regex_validation:
+
+  Tipo$ = "EMAIL"
+  Error = 0
+  
+  REM Establece valores para el Regex
+  CALL STBL("PROGS")+ "Regex.bbj", Tipo$, Email_Content$, Error
+  
+  REM mensaje de validación 
+  IF (Error) = 1 THEN
+      x = MSGBOX("Correo electrónico inválido.")
+      GOTO Process_Area
+  ENDIF
+  
+return 
+
+REM ***************** Enviar Email  ****************************************
+
+Enviar_Email:
+
+  Gosub Credenciales
+  
+  Email_Content$ = Correo!.getText()
+  
+  REM Validaciones de email (que no se envie en blanco, que se seleccione un record)
+  IF admin = False THEN 
+      IF Len(Email_Content$) = 0 then 
+          x=msgbox("Favor de ingresar un email.")
+          GOTO Process_Area
+      ENDIF
+      
+        IF valorlist$ = "" then 
+          x=msgbox("Favor de seleccionar un record a enviar.")
+          GOTO Process_Area
+      ENDIF
+   ELSE 
+     User = False 
+    
+       IF Len(Email_Content$) = 0 then 
+         Email_Content$ = "animalshelter2025@gmail.com"
+       ELSE 
+    
+      ENDIF
+  ENDIF 
+  
+  GOSUB Regex_Validation
+  
+  IF (Admin = TRUE and valorlist$ = "") or (Admin = True and valorlist$ <> "" and Email_Content$ = "animalshelter2025@gmail.com") THEN 
+    esValido = 1
+    GOTO valido
+  ELSE 
+  
+    GOTO Verificacion_Dominio
+    
+ REM ***************** Validación de Email  **************************************** 
+ 
+  Verificacion_Dominio: 
+  
+    dim dominios$[11]
+    dominios$[0] = "@gmail.com"
+    dominios$[1] = "@hotmail.com"
+    dominios$[2] = "@outlook.com"
+    dominios$[3] = "@yahoo.com"
+    dominios$[4] = "@icloud.com"
+    dominios$[5] = "@aol.com"
+    dominios$[6] = "@protonmail.com"
+    dominios$[7] = "@mail.com"
+    dominios$[8] = "@zoho.com"
+    dominios$[9] = "@live.com"
+    dominios$[10] = "@ojedatech.com"
+    
+  Correo_validation! = Correo!.getText().toString()
+  
+  esValido = 0
+  for i = 0 to len(dominios$) - 1
+      if Correo_validation!.endsWith(dominios$[i]) then
+          esValido = 1
+          break
+      endif
+  next i
+  
+  GOTO valido
+  
+  return 
+  
+  Valido: 
+  
+    if esValido then
+          Email = TRUE 
+          GOSUB Pantalla_Impresion 
+          GOSUB Deshabilita_Botones
+          GOSUB Crear_Email
+          GOSUB Inicializa_Pantalla
+          GOSUB Habilita_Botones
+          Email = FALSE
+          GOTO Clear_Process
+    else
+        x = msgbox("Dominio no reconocido, favor de utilizar un dominio reconocido.")
+    endif
+    
+  return 
+  
+return 
+
+REM ***************** Crear Email  ****************************************
+
+Crear_Email: 
+
+  use java.io.File
+  use com.basis.api.admin.BBjAdminEmailService
+  use com.basis.api.admin.BBjAdminEmailMessage
+  use com.basis.api.admin.BBjAdminEmailAttachment
+  
+  declare BBjAdminBase api_email!
+  declare BBjAdminEmailService emailSvc!
+  declare BBjAdminEmailMessage msg!
+  declare BBjAdminEmailAttachment attachment!
+  declare java.io.File pdfFile!
+  
+  rem Crea una instancia de BBJ admin
+  api_email! = BBjAdminFactory.getBBjAdmin("admin", "admin123")
+  
+  rem Obtiene el servicio que fue creado por el nombre
+  emailSvc! = api_email!.getEmailService("GmailBBJ")
+  
+  IF (admin = False) or (Admin = True and valorlist$ <> "") Then 
+   pdfPath$ = "C:\Animal_Shelter\PDFs\" + ValorList$ + ".pdf"
+  ELSE 
+      pdfPath$ = "C:\Animal_Shelter\PDFs\Impresion_Total_Landscape.pdf"
+  ENDIF
+  
+  pdfFile! = new File(pdfPath$)
+  
+  attachment! = new BBjAdminEmailAttachment()
+  attachment!.setFilename("ReporteAnimal.pdf")
+  attachment!.setBytesFromFile(pdfFile!)
+  
+  emailServices! = api_email!.getEmailServices()
+  
+  rem Crea y enviar el mensaje
+  msg! = emailSvc!.createMessage()
+  
+  REM Validaciones
+  IF (admin = False) or (Admin = True and valorlist$ <> "" and Email_Content$ = "animalshelter2025@gmail.com") Then 
+    Email_Content_Subject$ = "Reporte de " + ANIMALS_GEN$.NAME$ + " - Animal Shelter"
+    Email_Content_Message$ = "Se adjunta el PDF solicitado con el reporte del animal con record: " + ANIMALS_GEN$.Animal_ID$ + " y nombre: " + ANIMALS_GEN$.NAME$
+  ELSE 
+    Email_Content_Subject$ = "Reporte de animales - Animal Shelter"
+    Email_Content_Message$ = "Se adjunta el PDF solicitado con los reportes de los animales de Animal Shelter" 
+  ENDIF
+  
+  REM Contenido del email
+  recipient$ = Email_Content$
+  subject$ = Email_Content_Subject$
+  message$ = Email_Content_Message$
+  
+  msg!.setString(BBjAdminEmailMessage.TO, recipient$)
+  msg!.setString(BBjAdminEmailMessage.SUBJECT, subject$)
+  msg!.setString(BBjAdminEmailMessage.TEXT, message$)
+  msg!.setString(BBjAdminEmailMessage.BCC, "animalshelter2025@gmail.com")
+  msg!.addAttachment(attachment!)
+  emailSvc!.sendMessage(msg!)
+  
+  REM Feedback de que el email fue enviado
+  x = msgbox("¡El correo fue enviado exitosamente al email " + Email_Content$  + "!")
+  
+  REM Actualiza las variables de control 
+   IF User = False THEN 
+      User = TRUE
+      Admin = False
+   ENDIF
+  
+  GOSUB clear_process
+
+return 
+
+REM ************ Verifica las credenciales (Admin/User) ***************
+
+Credenciales: 
+  
+  REM añade los items predeterminados a la lista
+  credenciales$ = Is_admin!.getText()
+  
+  IF credenciales$ = "" THEN 
+    Is_admin!.removeAllItems()
+    Is_admin!.addItem("User")
+    Is_admin!.addItem("Admin")
+    
+    REM Selecciona user automáticamente
+    Is_admin!.selectIndex(0) 
+    
+    user = TRUE
+    
+  ELSE 
+    indice_admin = Is_admin!.getSelectedIndex()
+  
+    REM Impresión de un solo record
+    IF indice_admin = 0 THEN
+        Is_admin!.setShortCue("User")
+        
+        user = TRUE 
+        admin = FALSE
+      
+    ENDIF
+    
+    REM Impresión de varios records y records sencillos en modo Portrait
+    IF indice_admin = 1 THEN
+        Is_admin!.setShortCue("Admin")
+        
+        admin = True  
+        user = FALSE  
+       
+    ENDIF
+  
+    GOSUB Tipo_de_Impresion
+  
+  ENDIF
+
+return 
+
+REM ************ Rutina de Manejo de Errores ************
+
+ERROR_ROUTINE:
+
+    PRINT "Error al ejecutar una operación. Código de error:", STR(ERR)
+    IF Canal1 > 0 THEN CLOSE(Canal1) 
+    IF Canal2 > 0 THEN CLOSE(Canal2) 
+    IF Canal3 > 0 THEN CLOSE(Canal3) 
+    IF Canal4 > 0 THEN CLOSE(Canal4) 
+    IF Canal5 > 0 THEN CLOSE(Canal5) 
+    IF Canal6 > 0 THEN CLOSE(Canal6) 
+    IF Canal7 > 0 THEN CLOSE(Canal7) 
+    IF Canal8 > 0 THEN CLOSE(Canal8) 
+    
+    RETURN
+
+REM ********** Subrutinas  de cerrar **********
+
+APP_CLOSE:
+
+    sysgui!.setContext(CONTEXT)
+    Gosub Cerrar_Archivos
+    RESCLOSE(Resource)
+    Print (SYSGUI)'destroy'(0)
+    Close (SYSGUI)
+    IF EnCall Then Exit else Release
+
+NoSalir:
+
+return
+
+REM ********** Rutina de Cerrar Archivos **********
+Cerrar_Archivos:
+
+    IF Canal1 > 0 THEN CLOSE(Canal1) 
+    IF Canal2 > 0 THEN CLOSE(Canal2) 
+REM     IF Canal3 > 0 THEN CLOSE(Canal3) 
+REM     IF Canal4 > 0 Then Close(Canal4)
+REM     IF Canal5 > 0 THEN CLOSE(Canal5)
+REM     IF Canal6 > 0 THEN CLOSE(Canal6)
+REM     IF Canal7 > 0 THEN CLOSE(Canal7)
+    IF Canal8 > 0 THEN CLOSE(Canal8) 
+
+return
+
+REM ************ Clear process *************
+Clear_Process:
+
+  If html_visible = 1 then Gosub Pagina_Web
+  
+    Gosub Inicializa_Pantalla 
+    Gosub Abrir_Archivos
+    Gosub Carga_Lista
+    Gosub Desabilita_Pantalla
+    
+    valorlist$ = ""
+  
+  IF Editar = TRUE or Deshabilita_nuevo_expediente = TRUE or Impresion_Total = True or Impresion_Total_Landscape = TRUE or Impresion = TRUE THEN
+    GOSUB Stop_Process
+  ENDIF
+
+return 
+
+Stop_Process:
+ 
+  Deshabilitar_Botones = TRUE
+  GOSUB Deshabilita_Botones
+  Deshabilitar_Botones = False
+  GOSUB Habilita_Botones
+  GOTO Process_Area
+
+return 
+
+REM ************** Inicializar la Pantalla ***************
+
+Inicializa_Pantalla:
+
+  list!.setText("")
+  Name!.setText("")
+  Age!.setText("")
+  Type!.setText("")
+  Gender!.setText("")
+  Color!.setText("")
+  Size!.setText("")
+  Breed!.setText("")
+  AdoptionStatus!.setText("")
+  HealthInfo!.setText("")
+  Correo!.setText("")
+  Html_box!.setText("")
+
+return 
+
+REM **************** Deshabilita la pantalla ***************
+Desabilita_Pantalla: 
+
+  Name!.setEnabled(FALSE)
+  Age!.setEnabled(FALSE)
+  Type!.setEnabled(FALSE)
+  Gender!.setEnabled(FALSE)
+  Color!.setEnabled(FALSE)
+  Size!.setEnabled(FALSE)
+  Breed!.setEnabled(FALSE)
+  AdoptionStatus!.setEnabled(FALSE)
+  HealthInfo!.setEnabled(FALSE)
+
+return 
+
+
+REM ************** Habilita la pantalla **********************
+
+Habilita_Pantalla: 
+
+  Name!.setEnabled(TRUE)
+  Age!.setEnabled(TRUE)
+  Type!.setEnabled(TRUE)
+  Gender!.setEnabled(TRUE)
+  Color!.setEnabled(TRUE)
+  Size!.setEnabled(TRUE)
+  Breed!.setEnabled(TRUE)
+  AdoptionStatus!.setEnabled(TRUE)
+  HealthInfo!.setEnabled(TRUE)
+
+return
+
+REM *************** Deshabilita Botones *******************
+
+Deshabilita_Botones: 
+
+REM Creación de expediente
+  IF Deshabilita_nuevo_expediente = TRUE THEN 
+  
+    Crear_Record!.setEnabled(FALSE)
+    Editar!.setEnabled(FALSE)
+    Borrar!.setEnabled(FALSE)
+    Impresion_list!.setEnabled(FALSE)
+    Correo!.setEnabled(FALSE)
+    Email_button!.setEnabled(FALSE)
+    Html_box!.setEnabled(False)
+    Html_button!.setEnabled(False)
+    Impresion_button!.setEnabled(False)
+    XML_Document!.setEnabled(FALSE)
+    Reporte_HTML!.setEnabled(FALSE)
+  
+  ENDIF
+ 
+REM Edición 
+  IF Editar = TRUE THEN 
+  
+    Crear_Record!.setEnabled(FALSE)
+    Borrar!.setEnabled(FALSE)
+    Editar!.setEnabled(FALSE)
+    Impresion_list!.setEnabled(FALSE)
+    Correo!.setEnabled(FALSE)
+    Email_button!.setEnabled(FALSE)
+    Html_box!.setEnabled(False)
+    Html_button!.setEnabled(False)
+    Impresion_button!.setEnabled(False)
+    XML_Document!.setEnabled(FALSE)
+    Reporte_HTML!.setEnabled(FALSE)
+  
+  ENDIF
+  
+REM Impresión (sencilla, compuesta)
+  IF Impresion = True or Impresion_Total = TRUE or Impresion_Total_Landscape = TRUE THEN  
+  
+    Crear_Record!.setEnabled(FALSE)
+    Editar!.setEnabled(FALSE)
+    Borrar!.setEnabled(FALSE)
+    Correo!.setEnabled(FALSE)
+    Email_button!.setEnabled(FALSE)
+    Html_box!.setEnabled(False)
+    Html_button!.setEnabled(False)
+    XML_Document!.setEnabled(FALSE)
+    Reporte_HTML!.setEnabled(FALSE)
+    
+  ENDIF
+ 
+REM Email 
+  IF Email = TRUE THEN 
+  
+    Crear_Record!.setEnabled(FALSE)
+    Borrar!.setEnabled(FALSE)
+    Editar!.setEnabled(FALSE)
+    Impresion_list!.setEnabled(FALSE)
+    Correo!.setEnabled(FALSE)
+    Email_button!.setEnabled(FALSE)
+    Html_box!.setEnabled(False)
+    Html_button!.setEnabled(False)
+    Impresion_button!.setEnabled(False)
+    XML_Document!.setEnabled(FALSE)
+    Reporte_HTML!.setEnabled(FALSE) 
+  
+  ENDIF 
+ 
+REM Ver HTML 
+  IF pagina_web = TRUE THEN 
+  
+    Crear_Record!.setEnabled(FALSE)
+    Insertar!.setVisible(FALSE)
+    Editar!.setEnabled(FALSE)
+    Borrar!.setEnabled(FALSE)
+    list!.setEnabled(TRUE)
+    Impresion_list!.setEnabled(TRUE)
+    Correo!.setEnabled(FALSE)
+    Email_button!.setEnabled(FALSE)
+    Impresion_button!.setEnabled(False)
+    XML_Document!.setEnabled(FALSE)
+    Reporte_HTML!.setEnabled(FALSE)
+  
+  ENDIF 
+ 
+REM XML  
+  IF XML = TRUE THEN 
+  
+    Crear_Record!.setEnabled(FALSE)
+    Insertar!.setVisible(FALSE)
+    Editar!.setEnabled(FALSE)
+    Borrar!.setEnabled(FALSE)
+    list!.setEnabled(TRUE)
+    Impresion_list!.setEnabled(TRUE)
+    Correo!.setEnabled(FALSE)
+    Email_button!.setEnabled(FALSE)
+    Html_box!.setEnabled(False)
+    Html_button!.setEnabled(False)
+    Impresion_button!.setEnabled(False)
+    XML_Document!.setEnabled(FALSE)
+  
+  ENDIF 
+ 
+REM reporte HTML 
+  IF Reporte_HTML = TRUE THEN
+   
+    Crear_Record!.setEnabled(FALSE)
+    Insertar!.setVisible(FALSE)
+    Editar!.setEnabled(FALSE)
+    Borrar!.setEnabled(FALSE)
+    list!.setEnabled(TRUE)
+    Impresion_list!.setEnabled(TRUE)
+    Correo!.setEnabled(FALSE)
+    Email_button!.setEnabled(FALSE)
+    Html_box!.setEnabled(False)
+    Html_button!.setEnabled(False)
+    Impresion_button!.setEnabled(False)
+    Reporte_HTML!.setEnabled(FALSE)
+    
+  ENDIF
+
+REM deshabilitar botones (Clear)  
+  IF Deshabilitar_Botones = TRUE THEN 
+  
+    Crear_Record!.setEnabled(FALSE)
+    Insertar!.setVisible(FALSE)
+    Editar!.setEnabled(FALSE)
+    Borrar!.setEnabled(FALSE)
+    list!.setEnabled(TRUE)
+    Impresion_list!.setEnabled(TRUE)
+    Correo!.setEnabled(FALSE)
+    Email_button!.setEnabled(FALSE)
+    Html_box!.setEnabled(False)
+    Html_button!.setEnabled(False)
+    Impresion_button!.setEnabled(False)
+    XML_Document!.setEnabled(FALSE)
+    Reporte_HTML!.setEnabled(FALSE)
+    
+  ENDIF 
+
+return 
+
+REM *************** Habilita Botones **********************
+
+Habilita_Botones: 
+
+  Crear_Record!.setEnabled(TRUE)
+  Insertar!.setEnabled(TRUE)
+  Editar!.setEnabled(TRUE)
+  Borrar!.setEnabled(TRUE)
+  Impresion_list!.setEnabled(TRUE)
+  Correo!.setEnabled(TRUE)
+  Email_button!.setEnabled(TRUE)
+  Html_box!.setEnabled(TRUE)
+  Html_button!.setEnabled(TRUE)
+  Impresion_button!.setEnabled(TRUE)
+  XML_Document!.setEnabled(TRUE)
+  Reporte_HTML!.setEnabled(TRUE)
+ 
+return 
+
+REM ************** Desplegar los campos *******************
+
+Desplegar_Campos:
+
+    Name!.setText(cvs(Animal$.NAME$, 3))             
+    Age!.setText(cvs(Animal$.AGE$, 3))
+    Type!.setText(cvs(Animal$.TYPE$, 3))
+    Gender!.setText(cvs(Animal$.GENDER$, 3))
+    Color!.setText(cvs(Animal$.COLOR$, 3))
+    Size!.setText(cvs(Animal$.SIZE$, 3))
+    Breed!.setText(cvs(Animal$.BREED$, 3))
+    AdoptionStatus!.setText(cvs(Animal$.ADOPTION_STATUS$, 3))
+    HealthInfo!.setText(cvs(Animal$.HEALTH_INFO$, 3))
+      
+    IF Editar = FALSE Then GOSub Desabilita_Pantalla
+
+return
+
+REM ************* Nuevo expediente *******************
+
+Nuevo_Expediente: 
+
+  GOSub Habilita_Pantalla
+  list!.setEnabled(FALSE)
+  GOSub Inicializa_Pantalla
+  Gosub Cargar_List_Buttons
+  Deshabilita_nuevo_expediente = TRUE 
+  GOsub Deshabilita_botones 
+  GoSub Crear_Expediente
+  Insertar!.setVisible(TRUE)
+
+return 
+
+
+REM ************* Crea expediente *********************
+Crear_Expediente:
+  
+  REM Abre el canal 
+  GoSub Abrir_Archivos 
+  
+  Incrementar_ID:
+  REM Declaración de variable
+  Max_ID = 0  ;REM control de ID
+  
+  REM loop que busca el max ID de los records
+  NextRec3:
+  
+    K$ = Key(Canal2, KNUM=0, END=Fin) ;REM lee el los records encontrados (IDS)
+    READ RECORD (Canal2) Animal$
+    
+    REM Conversión de ID para comparación 
+    Current_ID = NUM(Animal$.ANIMAL_ID$)
+    
+    REM Verifica si el ID actual es mayor que el máximo registrado
+    If Current_ID > Max_ID Then
+        Max_ID = Current_ID
+    Endif
+    
+  GOTO NextRec3
+  
+  REM realiza el incremento del ID 
+  Fin:  
+  
+  REM Aplica un Masking
+      NuevoID$=Str(((Max_ID)+1):"0000000000")
+      Animal_ID$= NuevoID$
+
+Return
+    
+REM **************** Colectar Campos ************************
+Colectar_Campos:
+
+REM (Si está en modo de editar, entonces, el valor es el seleccionado)
+    IF Editar = TRUE THEN 
+    Animal_ID$ = ValorList$ 
+    ENDIF
+    
+    REM CVS (le elimina los espacios)
+    Animal$.Animal_ID$=CVS(Animal_ID$,3) 
+    Animal$.Name$=cvs(Name!.getText(), 3)            
+    Animal$.Age$=(cvs(Age!.getText(), 3))
+    Animal$.Type$=(cvs(Type!.getText(), 3))
+    Animal$.Gender$=(cvs(Gender!.getText(), 3)) 
+    Animal$.Size$=(cvs(Size!.getText(), 3))
+    Animal$.Breed$ =(cvs(Breed!.getText(), 3))
+    Animal$.Color$ =(cvs(Color!.getText(), 3))
+    Animal$.ADOPTION_STATUS$ = CVS(AdoptionStatus!.getText(), 3)
+    Animal$.HEALTH_INFO$ = CVS(HealthInfo!.getText(), 3)  
+    
+    REM valida que no se envié ningún campo vacío. 
+    IF CVS(Animal$.Name$, 3) = "" OR CVS(Animal$.Age$, 3) = "" OR CVS(Animal$.Type$, 3) = "" OR CVS(Animal$.Gender$, 3) = "" OR CVS(Animal$.Size$, 3) = "" OR CVS(Animal$.Breed$, 3) = "" OR CVS(Animal$.Color$, 3) = "" OR CVS(Animal$.ADOPTION_STATUS$, 3) = "" OR CVS(Animal$.HEALTH_INFO$, 3) = "" THEN
+         x = msgbox("Por favor complete todos los campos antes de guardar.", 64 + 0, "Campos requeridos")
+    ELSE
+    
+    REM Valida los characteres en los campos entrados
+    IF LEN(CVS(Animal$.Name$, 3)) > 10 THEN 
+        x = msgbox("Favor de elegir un nombre que tenga menos de 11 caracteres")
+        GOTO Process_Area
+    ENDIF
+    
+    REM Valida los characteres de breed 
+    IF LEN(CVS(Animal$.Breed$, 3)) > 20 THEN 
+        x = msgbox("Favor de elegir un breed que tenga menos de 21 caracteres")
+        GOTO Process_Area
+    ENDIF
+    
+    REM valida que la edad entrada sea numérica
+    
+      Age_To_Convert$ = CVS(Animal$.Age$, 3)
+      
+      tieneNumero = 0
+      longitud = LEN(Age_To_Convert$)
+      
+      FOR i = 1 TO longitud
+          ch$ = Age_To_Convert$(i, 1);REM toma un char
+          IF ch$ = "0" OR ch$ = "1" OR ch$ = "2" OR ch$ = "3" OR ch$ = "4" OR ch$ = "5" OR ch$ = "6" OR ch$ = "7" OR ch$ = "8" OR ch$ = "9" THEN
+              tieneNumero = 1
+              BREAK
+          ENDIF
+      NEXT i
+      
+      IF tieneNumero = 0 THEN
+          x = msgbox("Edad inválida. Favor de ingresar un número.")
+          GOTO Process_Area
+      ENDIF
+
+      REM Valida la edad no sea mayor al promedio
+       IF (type_actual$ = "Dog" AND NUM(Age_To_Convert$) > 16) OR (type_actual$ = "Cat" AND NUM(Age_To_Convert$) > 17) OR (type_actual$ = "Bunny" AND NUM(Age_To_Convert$) > 13) OR (type_actual$ = "Bird" AND NUM(Age_To_Convert$) > 81) OR (type_actual$ = "Fish" AND NUM(Age_To_Convert$) > 11) THEN
+        x = msgbox ("Favor de validar la edad nuevamente")
+          GOTO Process_Area
+       ELSE 
+       
+        raw_name$ = cvs(Name!.getText(), 3)
+        raw_breed$ = cvs(Breed!.getText(), 3)
+        
+        IF raw_name$ <> "" and raw_breed$ <> "" THEN
+            REM convierte el caracter a uppercase 
+            
+            REM Name
+            first_char_name$ = raw_name$(1,1)
+            fc_n!=first_char_name$ 
+            first_char_name$ = fc_n!.toUpperCase()
+            
+            REM Breed
+            first_char_breed$ = raw_breed$(1,1)
+            fc_b!=first_char_breed$
+            first_char_breed$ = fc_b!.toUpperCase()
+          
+            REM convierte lo siguiente a lowercase  
+            
+            REM Name
+            rest_char_name$ = raw_name$(2,len(raw_name$)-1)
+            rc_n!=rest_char_name$
+            rest_char_name$ = rc_n!.toLowerCase()
+            
+            rest_char_breed$ = raw_breed$(2,len(raw_breed$)-1)
+            rc_b!=rest_char_breed$
+            rest_char_breed$ = rc_b!.toLowerCase()
+            
+            REM concatena 
+            capitalized_name$ = first_char_name$ + rest_char_name$
+            capitalized_breed$ = first_char_breed$ + rest_char_breed$
+            
+            REM se le asigna al objeto (template)
+            Animal$.Name$ = capitalized_name$
+            Animal$.Breed$ = capitalized_breed$
+          ENDIF
+      ENDIF
+
+       Rem Escribe la data
+      Write Record(Canal5,Key=Animal_ID$)Animal$
+      
+      REM envia un mensaje dependiendo si se está editando o guardando
+      IF Editar = FALSE THEN 
+        x = msgbox("¡El record fue guardado exitosamente!")
+        Deshabilita_nuevo_expediente = False 
+      ELSE 
+        x = msgbox("¡El record fue editado exitosamente!")
+        Editar = FALSE 
+        Insertar!.setText("BITMAP=add.png")
+      ENDIF 
+      
+      Insertar!.setVisible(FALSE)
+      GoSub Clear_Process
+      list!.setEnabled(TRUE)
+      
+      ENDIF
+    ENDIF
+    
+  SalirNuevo:
+
+    GOSUB Habilita_botones
+    
+    RETURN
+    
+REM ******************* Editar Campos **************************
+
+Editar_Campos:
+
+  IF ValorList$ = ""
+    msg = msgbox("Por favor seleccionar un Record a editar")
+    GOTO Clear_Process
+  ENDIF
+
+  Editar = TRUE
+  Insertar!.setText("BITMAP=edit.png")
+  
+  GOSub Abrir_Archivos
+  GOSub Habilita_Pantalla
+  GOSub Deshabilita_Botones
+  
+  Insertar!.setVisible(TRUE)
+  Insertar!.setShortCue("Editar Record")
+  
+  Gosub Cargar_List_Buttons
+
+return 
+
+REM ****************** Eliminar Data ***************************
+
+Elimina_Data:
+
+  IF ValorList$ = ""
+    msg = msgbox("Por favor seleccionar un Record a eliminar")
+    GOTO Clear_Process
+  ENDIF
+
+  REM Pregunta si desea eliminar la data
+  Titulo$ = "Eliminar Record"
+  Mensaje$ = "¿Desea Eliminar el expediente?"
+
+  Answer = MsgBox(Mensaje$, 4 + 32, Titulo$)  ;REM 4 = Botones Sí y No, 32 = Icono de Pregunta
+
+  REM (NO, else , si )
+  If Answer =7 Then  
+      Goto Clear_Process
+  Else 
+      GOSub Abrir_Archivos
+      window!.setCursor(3)
+    
+REM borra el record seleccionado
+    Remove (Canal6,Key=ValorList$,Dom=Proxline1)
+    
+    Proxline1:
+  
+      window!.setCursor(0)
+      Answer=0
+      Titulo$ = "Record Eliminado"
+      Mensaje$ = "El Record ha sido eliminado exitosamente"
+  
+      Answer = MsgBox(Mensaje$, 0 + 64, Titulo$)  ;REM 4 = Botón de ok, 32 = Icono de Información
+      Goto Clear_Process
+      
+    Endif
+
+return    
